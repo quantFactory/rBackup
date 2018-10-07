@@ -10,181 +10,186 @@ myDF <- read.csv(path)
 # # (hint : use decreasing=T and indexing )
 flightOrigin <- table(myDF$Origin)
 sort(flightOrigin, decreasing=TRUE)[1:10]
+# dplyr
 
 # 2) Assign the names of the ten most popular airports according to the number of origins of flights to 
 ## variable called mostPopularOrg
 # # (hint : use names() and indexing)
 mostPopularOrg <- names(sort(flightOrigin, decreasing=TRUE))[1:10]
 mostPopularOrg
+# dplyr
 
 # 3) Assign the names of the ten most popular airports according to the number of destinations of flights to 
 ## variable called mostPopularDes
 flightDestination <- table(myDF$Dest)
 mostPopularDest <- names(sort(flightDestination, decreasing=TRUE))[1:10]
 mostPopularDest
+# dplyr
 
 # 4) How many flights had their origin in one of these 10 most popular airports
 ## (hint : use %in%)
 sum(myDF$Origin %in% mostPopularOrg)
+# dplyr
 
 # 5)How many flights had their destinationn in one of these 10 most popular airports
 ## (hint : use %in%)
 sum(myDF$Dest %in% mostPopularDest)
+# dplyr
 
 # 6) Find flights for which the origin and the destination
 # were among the 10 most popular airports
 ## (hint : use %in%)
 sum(myDF$Origin %in% mostPopularOrg & myDF$Dest %in% mostPopularDest)
+# dplyr
 
 # 7) For the purposes of this question, treat the group 
 # of the 200 least popular airports according to the 
 # number of flights having these as the origins.
 # How many flights had one of these 200 least popular 
 # airports as their origin?
-leastPopularOrg <- names(sort(flightOrigin)[1:200])
-leastPopularOrg
-sum(myDF$Origin %in% leastPopularOrg)
+leastPopularOrg <- sort(flightOrigin)[1:200]
+sum(leastPopularOrg)
+# dplyr
 
 # 8) Index a vector according to the names of the elements in the vector
 ##8a) How many flights departed from "IND" ?
 flightOrigin['IND']
+# dplyr
 
 ##8b) How many flights departed from "IND","ORD","JFK","EWR","IAD" ?
-sum(flightOrigin[c('IND', 'ORD', 'JFK', 'EWR', 'IAD')])
-
-# org <- c('IND', 'ORD', 'JFK', 'EWR', 'IAD')
-# sum(myDF$Origin %in% org, na.rm = TRUE)
+flightOrigin[c('IND', 'ORD', 'JFK', 'EWR', 'IAD')]
+# dplyr
 
 ##8c) How many flights departed from 10 most popular airports ?
-sum(flightOrigin[mostPopularOrg])
+flightOrigin[mostPopularOrg]
+# dplyr
 
 ##8d) How many flights departed from 10 least popular airports ?
-sum(flightOrigin[leastPopularOrg[1:10]])
+flightOrigin[names(leastPopularOrg[1:10])]
+# dplyr
 
 # 8e) How many flights landed at Ronald Reagan Washington
 ## National ("DCA") or Washington Dulles Airport ("IAD") in 2008? 
-sum(flightDestination[c('DCA', 'IAD')])
+flightDestination[c('DCA', 'IAD')]
+# dplyr
 
 # 9)Check the first 20 flights and see which one departed on time or early
 first20 <- head(myDF, 20)
 first20DepOnTimeEarly <- subset(first20, first20$DepDelay <= 0); first20DepOnTimeEarly
 nrow(first20DepOnTimeEarly)
+# dplyr
 
 ##9a) Restrict attention to only the 10 most popular airports 
 ##and see which one departed on time or early
-mostPop <- subset(myDF, myDF$Origin %in% mostPopularOrg)
-mostPopDepOnTimeEarly <- subset(mostPop, mostPop$DepDelay <= 0); head(mostPopDepOnTimeEarly)
-nrow(mostPopDepOnTimeEarly)
+mostPopDepOnTimeEarly <- tapply(myDF$DepDelay <= 0, myDF$Origin, sum, na.rm=TRUE)[mostPopularOrg]
+mostPopDepOnTimeEarly
+# dplyr
 
 ##9b)Find the percentage of flights at each of the 10 most popular 
 # airports that departed on time or early
-
-flight_percentage <- function(count, total) {
-  pct <- count / total * 100
-  return(round(pct, digits = 2))
-}
-
-popAirportDelayPct <- c()
-for (org in mostPopularOrg) {
-  noDelay <- sum(myDF$Origin == org & myDF$DepDelay <= 0, na.rm = TRUE)
-  popAirportDelayPct[org] <- flight_percentage(noDelay, nrow(myDF))
-}
-popAirportDelayPct
+mostPopDepOnTimeEarly / flightOrigin[mostPopularOrg]  * 100
 
 # 9c) What percentage of flights departed from IND on time or early?
-flight_percentage(sum(myDF$Origin=='IND' & myDF$DepDelay <=0, na.rm=TRUE), nrow(myDF))
+sum(myDF$Origin=='IND' & myDF$DepDelay <= 0, na.rm=TRUE) / flightOrigin['IND'] * 100
+# dplyr
 
 #10) Analyze Flights by Origin Airport and Month of Departure
 ##10a) Break the data in the DepDelay vector according to which city of origin 
-depOrg <- tapply(myDF$DepDelay, myDF$Origin, mean, na.rm=TRUE)
+depOrg <- tapply(myDF$DepDelay, myDF$Origin, length)
 head(depOrg)
+# dplyr
 
 ##10b) Break the data in the DepDelay vector according to month
-depMonth <- tapply(myDF$DepDelay, myDF$Month, mean, na.rm=TRUE)
+depMonth <- tapply(myDF$DepDelay, myDF$Month, length)
 head(depMonth)
+# dplyr
 
 #11) How many flights delay occur from each airport in each month ?
-
-# uniqueAirport <- unique(myDF$Origin)
-# length(uniqueAirport)
-# 
-# airportFlightDelay <- array(c(), dim=c(2,12,303))
-# for (airport in unique(myDF$Origin)) {
-#  # airportFlightDelay[airport] <- 
-#    tapply(myDF$Month[myDF$DepDelay>0 & myDF$Origin==airport],
-#         myDF$Month[myDF$DepDelay>0 & myDF$Origin==airport], length)
-# }
-# 
-# length(airportFlightDelay)
-# test <-array()
-# test[,,'IAD'] <- tapply(myDF$Month[myDF$DepDelay>0 & myDF$Origin=='IAD'],
-#        myDF$Month[myDF$DepDelay>0 & myDF$Origin=='IAD'], length)
+tapply(myDF$DepDelay[myDF$DepDelay > 0], 
+       list(myDF$Origin[myDF$DepDelay > 0], myDF$Month[myDF$DepDelay > 0]), length)
+# dplyr
 
 ##11a) Extract the data from origin airport = "IND"
 # and from the month of June
-juneInd <- subset(myDF, myDF$Origin=='IND' & myDF$Month==6)
-# juneInd <- subset(myDF, myDF$Origin=='IND' & myDF$Month==6 & myDF$DepDelay>0)
-nrow(juneInd)
-
-# tapply(myDF$Month[myDF$DepDelay>0 & myDF$Origin=='IND'],
-#        myDF$Month[myDF$DepDelay>0 & myDF$Origin=='IND'], length)[6]
-
-tapply(myDF$Month[myDF$Origin=='IND'],
-       myDF$Month[myDF$Origin=='IND'], length)[6]
+tapply(myDF$DepDelay, list(myDF$Origin, myDF$Month), length)['IND', 6]
+# dplyr
 
 ##11b) Extract the data from origin airport = "ATL"
 # and from the month of March
-marchAtl <- subset(myDF, myDF$Origin == 'ATL' & myDF$Month == 3)
-# marchAtl <- subset(myDF, myDF$Origin == 'ATL' & myDF$Month == 3 & myDF$DepDelay > 0)
-nrow(marchAtl)
-
-tapply(myDF$Month[myDF$Origin=='ATL'],
-       myDF$Month[myDF$Origin=='ATL'], length)[3]
-
-# tapply(myDF$Month[myDF$DepDelay>0 & myDF$Origin=='ATL'],
-#        myDF$Month[myDF$DepDelay>0 & myDF$Origin=='ATL'], length)[3]
+tapply(myDF$DepDelay, list(myDF$Origin, myDF$Month), length)['ATL',3]
+# dplyr
 
 # 11c) The number of flights delay from 3 airports = "ATL","AUS","BDL"
 # during the months of July through October
-flightDelay3airport <- tapply(myDF$Month[myDF$DepDelay>0 & myDF$Origin %in% c('ATL','AUS','BDL')],
-                              myDF$Month[myDF$DepDelay>0 & myDF$Origin %in% c('ATL','AUS','BDL')], length)[7:10]
-
+flightDelay3airport <- tapply(myDF$DepDelay[myDF$DepDelay > 0], list(myDF$Origin[myDF$DepDelay > 0], myDF$Month[myDF$DepDelay > 0]), length)[c('ATL', 'AUS', 'BDL'), 7:10]
 flightDelay3airport
+# dplyr
 
 # 11d) How many flights departed altogether from ATL, AUS, and BDL during the months of 
 #July 2008 through October 2008?
 sum(flightDelay3airport)
+colSums(flightDelay3airport)
+rowSums(flightDelay3airport)
+# dplyr
 
 # 11e) All the flight delays, month by month, frm IND airport
-tapply(myDF$Month[myDF$DepDelay>0 & myDF$Origin=='IND'],
-       myDF$Month[myDF$DepDelay>0 & myDF$Origin=='IND'], length)
+tapply(myDF$DepDelay[myDF$DepDelay > 0], 
+       list(myDF$Origin[myDF$DepDelay > 0], myDF$Month[myDF$DepDelay > 0]), length)['IND', ]
+# tapply(myDF$Month[myDF$DepDelay>0 & myDF$Origin=='IND'],
+#        myDF$Month[myDF$DepDelay>0 & myDF$Origin=='IND'], length)
+
+# dplyr
 
 # 11f) All the flight delays, month by month, frm both IND and ORD at once
-tapply(myDF$Month[myDF$DepDelay>0 & myDF$Origin %in% c('IND','ORD')],
-       myDF$Month[myDF$DepDelay>0 & myDF$Origin %in% c('IND','ORD')], length)
+allFlightDelay <- tapply(myDF$DepDelay[myDF$DepDelay > 0], 
+       list(myDF$Origin[myDF$DepDelay > 0], myDF$Month[myDF$DepDelay > 0]), length)[c('IND', 'ORD'), ]
+allFlightDelay
+
+tapply(myDF$DepDelay, 
+       list(myDF$Origin, myDF$Month), length)[c('IND', 'ORD'), ]
+
+# dplyr
 
 # 12) Calculating Percentages of Flights with delayed more than 30 minutes when departing
-moreThan30min <- flight_percentage(sum(myDF$DepDelay > 30, na.rm = TRUE), nrow(myDF))
-moreThan30min
+moreThan30min <- subset(myDF, myDF$DepDelay > 30)
+delayedFlight <- tapply(moreThan30min$DepDelay, list(moreThan30min$Origin, moreThan30min$Month), length)[c('IND', 'ORD'),]
+allFlight <- tapply(myDF$DepDelay, list(myDF$Origin, myDF$Month), length)[c('IND', 'ORD'),]
+pct <- delayedFlight / allFlight * 100
+pct
+
+# dplyr
 
 # 12a) find the percentage of flights with long delays and plot with dotchart()
-dotchart(moreThan30min)
+dotchart(pct)
+
+# dplyr
 
 # 12b) How many flights departed altogether from IND 
 # or ORD in 2008 with a delay of more than 30 minutes each?
-sum(myDF$Origin %in% c('IND', 'ORD') & myDF$DepDelay > 30, na.rm = TRUE)
+sum(tapply(myDF$DepDelay[myDF$DepDelay>30], myDF$Origin[myDF$DepDelay>30], length)[c('IND', 'ORD')])
+sum(delayedFlight)
+# dplyr
 
 #12c) In which month of 2008 was the percentage of long delays 
 #(i.e., flights with more than 30 minute delays) the highest?
 delayPerMonth <- tapply(myDF$Month[myDF$DepDelay > 30], myDF$Month[myDF$DepDelay > 30], length)
 delayPerMonth
+allFlightPerMonth <- tapply(myDF$Month, myDF$Month, length)
+allFlightPerMonth
+delayPctPerMonth <-   delayPerMonth / allFlightPerMonth * 100
+delayPctPerMonth
+names(which.max(delayPctPerMonth))
+
+which.max(colSums(delayedFlight/allFlight))
 
 monthDelayPct <- c()
 for (month in as.integer(names(delayPerMonth))) {
-  monthDelayPct[as.character(month)] <- flight_percentage(delayPerMonth[month], sum(myDF$Month==month))
+  monthDelayPct[as.character(month)] <- delayPerMonth[month] /  sum(myDF$Month==month) * 100
 }
 monthDelayPct
 names(which(monthDelayPct == max(monthDelayPct)))
+
+# dplyr
 
 # 13) Analyzing Flights by Time of Day for Departure
 # Break the day into 4 parts:
@@ -193,6 +198,8 @@ names(which(monthDelayPct == max(monthDelayPct)))
 # early evening (3) correspond to the times to 12 noon to 6 pm
 # late evening (4) correspond to the times to 6 pm to 12 midnight
 v<-ceiling(myDF$DepTime/600)
+# dplyr
+
 # build a vector called parts of the day
 partsofday <- rep(NA, times=dim(myDF)[1])
 partsofday
@@ -201,17 +208,27 @@ partsofday[v==2]<-"late morning"
 partsofday[v==3]<-"early evening"
 partsofday[v==4]<-"late evening"
 table(partsofday)
+
+# dplyr
+
 # and we can create a new column in the myDF data frame called "timeofday"
 # and we can store this information we just found into this column
 myDF$timeofday <- partsofday
 dim(myDF)
+
+# dplyr
+
 # just check to make sure that the first 6 flights were done properly
 head(myDF$timeofday)
 head(myDF$DepTime)
+# dplyr
+
 # 13a) How many flights departed from IND early in the morning?
 sum(myDF$Origin=='IND' & myDF$timeofday=='early morning', na.rm = TRUE)
 
+# dplyr
+
 # 13b) Tabulate how many flights occur, by splitting the flights according to
 # both the city of origin and also the time of the day when the flight departed
-orgTimePair <- paste(myDF$Origin, "in", myDF$timeofday)
-table(orgTimePair)
+tapply(myDF$DepDelay, list(myDF$Origin, myDF$timeofday), length)
+# dplyr
