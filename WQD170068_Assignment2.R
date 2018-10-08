@@ -5,42 +5,60 @@
 
 path <- file.path("E:\\academic\\mds-sem2\\WQD7004-Rprogramming\\2008.csv")
 myDF <- read.csv(path)
+library(dplyr)
 
 # 1) Sort in decreasing order the ten most popular airports according to the number of origins of flights
 # # (hint : use decreasing=T and indexing )
 flightOrigin <- table(myDF$Origin)
 sort(flightOrigin, decreasing=TRUE)[1:10]
+
 # dplyr
+popularOrg <- myDF %>% group_by(Origin) %>% summarize(origin_count=n()) %>% arrange(desc(origin_count))
+popularOrg[1:10,]
 
 # 2) Assign the names of the ten most popular airports according to the number of origins of flights to 
 ## variable called mostPopularOrg
 # # (hint : use names() and indexing)
 mostPopularOrg <- names(sort(flightOrigin, decreasing=TRUE))[1:10]
 mostPopularOrg
+
 # dplyr
+namesOfPopOrg <- popularOrg %>% select(Origin) %>% slice(1:10)
+namesOfPopOrg
+
 
 # 3) Assign the names of the ten most popular airports according to the number of destinations of flights to 
 ## variable called mostPopularDes
 flightDestination <- table(myDF$Dest)
-mostPopularDest <- names(sort(flightDestination, decreasing=TRUE))[1:10]
-mostPopularDest
+mostPopularDes <- names(sort(flightDestination, decreasing=TRUE))[1:10]
+mostPopularDes
+
 # dplyr
+mostPopularDest <- myDF %>% group_by(Dest) %>% summarize(dest_count=n()) %>% arrange(desc(dest_count)) %>% 
+                  select(Dest) %>% slice(1:10)
+mostPopularDest
 
 # 4) How many flights had their origin in one of these 10 most popular airports
 ## (hint : use %in%)
-sum(myDF$Origin %in% mostPopularOrg)
+sum(myDF$Origin %in% mostPopularDes)
+
 # dplyr
+myDF %>% filter(Origin %in% pull(namesOfPopOrg)) %>% nrow
 
 # 5)How many flights had their destinationn in one of these 10 most popular airports
 ## (hint : use %in%)
-sum(myDF$Dest %in% mostPopularDest)
+sum(myDF$Dest %in% mostPopularDes)
+
 # dplyr
+myDF %>% filter(Dest %in% pull(mostPopularDest)) %>% nrow
 
 # 6) Find flights for which the origin and the destination
 # were among the 10 most popular airports
 ## (hint : use %in%)
-sum(myDF$Origin %in% mostPopularOrg & myDF$Dest %in% mostPopularDest)
+sum(myDF$Origin %in% mostPopularOrg & myDF$Dest %in% mostPopularDes)
+
 # dplyr
+myDF %>% filter(Origin %in% pull(namesOfPopOrg), Dest %in% pull(mostPopularDest)) %>% nrow
 
 # 7) For the purposes of this question, treat the group 
 # of the 200 least popular airports according to the 
@@ -49,16 +67,25 @@ sum(myDF$Origin %in% mostPopularOrg & myDF$Dest %in% mostPopularDest)
 # airports as their origin?
 leastPopularOrg <- sort(flightOrigin)[1:200]
 sum(leastPopularOrg)
+
 # dplyr
+leastPopularAirport <- myDF %>% group_by(Origin) %>% summarize(origin_count=n()) %>% 
+                  arrange(origin_count) %>% select(Origin) %>% slice(1:200)
+leastPopularAirport
+myDF %>% filter(Origin %in% pull(leastPopularAirport)) %>% nrow
 
 # 8) Index a vector according to the names of the elements in the vector
 ##8a) How many flights departed from "IND" ?
 flightOrigin['IND']
+
 # dplyr
+myDF %>% filter(Origin=='IND') %>% nrow
 
 ##8b) How many flights departed from "IND","ORD","JFK","EWR","IAD" ?
 flightOrigin[c('IND', 'ORD', 'JFK', 'EWR', 'IAD')]
+
 # dplyr
+myDF %>% group_by(Origin) %>% nrow
 
 ##8c) How many flights departed from 10 most popular airports ?
 flightOrigin[mostPopularOrg]
