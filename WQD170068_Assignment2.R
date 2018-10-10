@@ -213,24 +213,29 @@ pct
 
 # dplyr
 lateDelayed <- myDF %>% filter(DepDelay > 30, Origin %in% c('IND', 'ORD')) %>% group_by(Origin, Month) %>% tally
+lateDelayed <- as.data.frame(lateDelayed)
 allDelayed <- myDF %>% filter(DepDelay > 0, Origin %in% c('IND', 'ORD')) %>% group_by(Origin, Month) %>% tally
-lateDelayed$n / allDelayed$n * 100
-# the percentage cannot be mutated into a column because of the groupings
+allDelayed <-  as.data.frame(allDelayed)
+allDelayed <- allDelayed %>% mutate(LatePercentages = lateDelayed$n / n * 100) %>% select(Origin, Month, LatePercentages)
 
 # 12a) find the percentage of flights with long delays and plot with dotchart()
 dotchart(pct)
 
 # dplyr
+dotchart(allDelayed$LatePercentages, allDelayed$Origin, allDelayed$Month, 
+         main = "Percentages of Late Flights in IND and ORD month by month in 2008", 
+         xlab="Percentages of late flights", ylab="Airport and Months")
 
 # 12b) How many flights departed altogether from IND 
 # or ORD in 2008 with a delay of more than 30 minutes each?
 sum(delayedFlight)
 
 # dplyr
+myDF %>% filter(DepDelay > 30, Origin %in% c('IND', 'ORD')) %>% nrow
 
 #12c) In which month of 2008 was the percentage of long delays 
 #(i.e., flights with more than 30 minute delays) the highest?
-delayPerMonth <- tapply(myDF$Month[myDF$DepDelay > 30], myDF$Month[myDF$DepDelay > 30], length)
+delayPerMonth <- tapply(myDF$DepDelay > 30, myDF$Month, sum, na.rm=T)
 delayPerMonth
 allFlightPerMonth <- tapply(myDF$Month, myDF$Month, length)
 allFlightPerMonth
@@ -239,6 +244,12 @@ delayPctPerMonth
 names(which.max(delayPctPerMonth))
 
 # dplyr
+longDelay <- myDF %>% filter(DepDelay > 30) %>% group_by(Month) %>% tally
+longDelay <- as.data.frame(longDelay); longDelay
+allFlight <- myDF %>% group_by(Month) %>% tally
+allFlight <- as.data.frame(allFlight); allFlight
+longDelay <- longDelay %>% mutate(LatePercentages = n / allFlight$n * 100) 
+which.max(longDelay$LatePercentages)
 
 # 13) Analyzing Flights by Time of Day for Departure
 # Break the day into 4 parts:
@@ -266,19 +277,26 @@ myDF$timeofday <- partsofday
 dim(myDF)
 
 # dplyr
+myDF <- myDF %>% mutate(timeofday = partsofday)
+dim(myDF)
 
 # just check to make sure that the first 6 flights were done properly
 head(myDF$timeofday)
 head(myDF$DepTime)
 
 # dplyr
+myDF %>% select(timeofday) %>% slice(1:6)
+myDF %>% select(DepTime) %>% slice(1:6)
 
 # 13a) How many flights departed from IND early in the morning?
 sum(myDF$Origin=='IND' & myDF$timeofday=='early morning', na.rm = TRUE)
 
 # dplyr
+myDF %>% filter(Origin=='IND', timeofday=='early morning') %>% nrow
 
 # 13b) Tabulate how many flights occur, by splitting the flights according to
 # both the city of origin and also the time of the day when the flight departed
 tapply(myDF$DepDelay, list(myDF$Origin, myDF$timeofday), length)
+
 # dplyr
+myDF %>% group_by(Origin, timeofday) %>% tally
